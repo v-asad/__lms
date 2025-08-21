@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "esnext", // Specifies the ECMAScript target version for compiled JavaScript.
+    "module": "commonjs", // Specifies the module code generation strategy (e.g., CommonJS for Node.js).
+    "moduleResolution": "node",
+    "outDir": "./dist", // Specifies the output directory for compiled JavaScript files.
+    "rootDir": "./src", // Specifies the root directory of TypeScript source files.
+    "strict": true, // Enables a set of strict type-checking options.
+    "esModuleInterop": true, // Enables compatibility with CommonJS modules when importing ES modules.
+    "skipLibCheck": true, // Skips type checking of declaration files (.d.ts).
+    "forceConsistentCasingInFileNames": true, // Disallows inconsistent casing in file names.
+    "resolveJsonModule": true, // Allows importing .json files as modules.
+    "sourceMap": true, // Generates source map files for debugging.
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "src/**/*.ts" // Includes all .ts files within the 'src' directory and its subdirectories.
+  ],
+  "exclude": [
+    "node_modules" // Excludes the 'node_modules' directory from compilation.
+  ],
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  }
+}
