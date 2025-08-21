@@ -1,0 +1,17 @@
+FROM node:18
+
+# Set working dir
+WORKDIR /app
+
+# Install dependencies
+COPY server/package*.json ./
+RUN npm install
+
+# Copy rest of backend code
+COPY server/ .
+
+# Expose port
+EXPOSE 8000
+
+# Start dev server
+CMD ["npm", "run", "dev"]
