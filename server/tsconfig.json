@@ -13,7 +13,7 @@
     "sourceMap": true, // Generates source map files for debugging.
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [

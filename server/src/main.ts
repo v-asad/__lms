@@ -1,12 +1,13 @@
 import { startStandaloneServer } from '@apollo/server/standalone';
 import gqlServer from './gql/schema';
 import config from './config/config';
+import authContext from './middlewares/auth';
 
-//  1. creates an Express app
-//  2. installs ApolloServer instance as middleware
-//  3. prepares app to handle incoming requests
-startStandaloneServer(gqlServer, {
+const options = {
   listen: { port: config.port },
-}).then(({ url }) => {
+  context: authContext,
+};
+
+startStandaloneServer(gqlServer, options).then(({ url }) => {
   console.log(`🚀  Server ready at: ${url}`);
 });
