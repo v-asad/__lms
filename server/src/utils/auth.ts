@@ -1,8 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { User } from '@/entities/user/types';
-
-const SECRET = 'SUPER_SECRET_KEY'; // move to process.env in real projects
+import config from '@/config/config';
 
 export interface JwtPayload {
   userId: string;
@@ -24,12 +23,12 @@ export const comparePassword = async (
 };
 
 export const createToken = (user: User): string => {
-  return jwt.sign({ userId: user.id }, SECRET, { expiresIn: '7d' });
+  return jwt.sign({ userId: user.id }, config.secret, { expiresIn: '7d' });
 };
 
 export const getUserFromToken = (token?: string): JwtPayload | null => {
   try {
-    if (token) return jwt.verify(token, SECRET) as JwtPayload;
+    if (token) return jwt.verify(token, config.secret) as JwtPayload;
   } catch {}
 
   return null;
