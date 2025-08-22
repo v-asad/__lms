@@ -12,6 +12,8 @@
     "resolveJsonModule": true, // Allows importing .json files as modules.
     "sourceMap": true, // Generates source map files for debugging.
     "baseUrl": ".",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
     "paths": {
       "@/*": ["./src/*"]
     }
