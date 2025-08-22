@@ -1,13 +1,9 @@
-import { ApolloServer } from '@apollo/server';
+import { buildSchema } from 'type-graphql';
+import CourseResolver from '@/entities/course/resolvers';
 
-import { AuthContext } from '@/utils/auth';
+const generateSchema = () =>
+  buildSchema({
+    resolvers: [CourseResolver],
+  });
 
-import typeDefs from './typeDefs';
-import resolvers from './resolvers';
-
-const gqlServer = new ApolloServer<AuthContext>({
-  typeDefs,
-  resolvers,
-});
-
-export default gqlServer;
+export default generateSchema;

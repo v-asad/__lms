@@ -20,13 +20,10 @@ model User {
   lastName   String  @db.VarChar(255)
   email      String  @unique @db.VarChar(255)
   password   String  @db.VarChar(255)
-  Course     Course? @relation(fields: [courseId], references: [id])
-  courseId   String?
 }
 
 model Course {
   id          String @id
   title       String
   description String
-  users       User[]
 }
