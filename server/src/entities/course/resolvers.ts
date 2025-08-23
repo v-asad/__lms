@@ -9,6 +9,9 @@ import {
 import CourseService from './service';
 import { NotFoundError } from '@/utils/errors';
 import { HandleErrors } from '@/decorators/handleErrors';
+import { Prisma } from '@prisma/client';
+
+const ENTITY = Prisma.ModelName.Course;
 
 @HandleErrors()
 @Resolver(Course)
@@ -24,7 +27,7 @@ export default class CourseResolver {
     const course = await this.courseService.findById(id);
     if (course) return course;
 
-    throw new NotFoundError('Course', id);
+    throw new NotFoundError(ENTITY, id);
   }
 
   @Query((returns) => [Course])
@@ -46,7 +49,7 @@ export default class CourseResolver {
     const course = await this.courseService.findById(id);
     if (course) return this.courseService.update(id, updateCourseData);
 
-    throw new NotFoundError('Course', id);
+    throw new NotFoundError(ENTITY, id);
   }
 
   @Mutation((returns) => Boolean)
@@ -57,6 +60,6 @@ export default class CourseResolver {
       return true;
     }
 
-    throw new NotFoundError('Course', id);
+    throw new NotFoundError(ENTITY, id);
   }
 }

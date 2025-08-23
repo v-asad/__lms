@@ -1,5 +1,4 @@
 import {
-  Permission,
   PermissionArgs,
   NewPermissionInput,
   UpdatePermissionInput,
@@ -26,7 +25,7 @@ export default class PermissionService {
       where: { id },
     });
   }
-  async remove(id: string): Promise<void> {
+  async remove(id: string) {
     await prisma.permission.delete({ where: { id } });
   }
 }

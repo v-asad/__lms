@@ -10,34 +10,37 @@ import { NotFoundError } from '@/utils/errors';
 import { HandleErrors } from '@/decorators/handleErrors';
 
 import PermissionService from './service';
+import { Prisma } from '@prisma/client';
+
+const ENTITY = Prisma.ModelName.Permission;
 
 @HandleErrors()
 @Resolver(Permission)
 export default class PermissionResolver {
-  private permissionService: PermissionService;
+  private service: PermissionService;
 
   constructor() {
-    this.permissionService = new PermissionService();
+    this.service = new PermissionService();
   }
 
   @Query((returns) => Permission, { nullable: true })
   async permission(@Arg('id') id: string) {
-    const permission = await this.permissionService.findById(id);
+    const permission = await this.service.findById(id);
     if (permission) return permission;
 
-    throw new NotFoundError('Permission', id);
+    throw new NotFoundError(ENTITY, id);
   }
 
   @Query((returns) => [Permission])
   async permissions(@Args() { skip, take }: PermissionArgs) {
-    return this.permissionService.findAll({ skip, take });
+    return this.service.findAll({ skip, take });
   }
 
   @Mutation((returns) => Permission)
   async addPermission(
     @Arg('addPermissionData') addPermissionData: NewPermissionInput,
   ) {
-    return this.permissionService.add(addPermissionData);
+    return this.service.add(addPermissionData);
   }
 
   @Mutation((returns) => Permission, { nullable: true })
@@ -46,21 +49,20 @@ export default class PermissionResolver {
     @Arg('updatePermissionData')
     updatePermissionData: UpdatePermissionInput,
   ) {
-    const permission = await this.permissionService.findById(id);
-    if (permission)
-      return this.permissionService.update(id, updatePermissionData);
+    const permission = await this.service.findById(id);
+    if (permission) return this.service.update(id, updatePermissionData);
 
-    throw new NotFoundError('Permission', id);
+    throw new NotFoundError(ENTITY, id);
   }
 
   @Mutation((returns) => Boolean)
-  async removePermission(@Arg('id') id: string): Promise<boolean> {
-    const permission = await this.permissionService.findById(id);
+  async removePermission(@Arg('id') id: string) {
+    const permission = await this.service.findById(id);
     if (permission) {
-      await this.permissionService.remove(id);
+      await this.service.remove(id);
       return true;
     }
 
-    throw new NotFoundError('Permission', id);
+    throw new NotFoundError(ENTITY, id);
   }
 }
