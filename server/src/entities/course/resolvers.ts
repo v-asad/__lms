@@ -1,7 +1,13 @@
 import { Arg, Args, Mutation, Query, Resolver } from 'type-graphql';
-import { Course, CourseArgs, NewCourseInput } from './schema';
+import {
+  Course,
+  CourseArgs,
+  NewCourseInput,
+  UpdateCourseInput,
+} from './schema';
 
 import CourseService from './service';
+import { NotFoundError } from '@/utils/errors';
 
 @Resolver(Course)
 export default class CourseResolver {
@@ -16,7 +22,7 @@ export default class CourseResolver {
     const course = await this.courseService.findById(id);
     if (course) return course;
 
-    throw new Error(`Course with ID: ${id} not found`);
+    throw new NotFoundError('Course', id);
   }
 
   @Query((returns) => [Course])
@@ -27,6 +33,18 @@ export default class CourseResolver {
   @Mutation((returns) => Course)
   async addCourse(@Arg('addCourseData') addCourseData: NewCourseInput) {
     return this.courseService.add(addCourseData);
+  }
+
+  @Mutation((returns) => Course, { nullable: true })
+  async updateCourse(
+    @Arg('id') id: string,
+    @Arg('updateCourseData')
+    updateCourseData: UpdateCourseInput,
+  ) {
+    const course = await this.courseService.findById(id);
+    if (course) return this.courseService.update(id, updateCourseData);
+
+    throw new NotFoundError('Course', id);
   }
 
   @Mutation((returns) => Boolean)

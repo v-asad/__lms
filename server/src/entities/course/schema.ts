@@ -25,6 +25,18 @@ export class NewCourseInput {
   description: string;
 }
 
+@InputType()
+export class UpdateCourseInput {
+  @Field({ nullable: true })
+  id: string;
+
+  @Field({ nullable: true })
+  title: string;
+
+  @Field({ nullable: true })
+  description: string;
+}
+
 @ArgsType()
 export class CourseArgs {
   @Field((type) => Int)

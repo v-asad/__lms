@@ -1,4 +1,9 @@
-import { Course, CourseArgs, NewCourseInput } from './schema';
+import {
+  Course,
+  CourseArgs,
+  NewCourseInput,
+  UpdateCourseInput,
+} from './schema';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -15,7 +20,7 @@ export default class CourseService {
       data,
     });
   }
-  async update(id: string, data: Partial<NewCourseInput>): Promise<Course> {
+  async update(id: string, data: UpdateCourseInput): Promise<Course | null> {
     return await prisma.course.update({
       data,
       where: { id },
