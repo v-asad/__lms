@@ -33,9 +33,7 @@ export default class CourseResolver {
   }
 
   @Mutation((returns) => Course)
-  async addCourse(
-    @Arg('addCourseData') addCourseData: NewCourseInput,
-  ): Promise<Course | null> {
+  async addCourse(@Arg('addCourseData') addCourseData: NewCourseInput) {
     return this.courseService.add(addCourseData);
   }
 
@@ -44,7 +42,7 @@ export default class CourseResolver {
     @Arg('id') id: string,
     @Arg('updateCourseData')
     updateCourseData: UpdateCourseInput,
-  ): Promise<Course | null> {
+  ) {
     const course = await this.courseService.findById(id);
     if (course) return this.courseService.update(id, updateCourseData);
 
@@ -52,7 +50,7 @@ export default class CourseResolver {
   }
 
   @Mutation((returns) => Boolean)
-  async removeCourse(@Arg('id') id: string): Promise<boolean> {
+  async removeCourse(@Arg('id') id: string) {
     const course = await this.courseService.findById(id);
     if (course) {
       await this.courseService.remove(id);
