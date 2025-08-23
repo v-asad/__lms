@@ -1,4 +1,4 @@
-import { Arg, Args, Mutation, Query, Resolver } from 'type-graphql';
+import { Arg, Args, Info, Mutation, Query, Resolver } from 'type-graphql';
 import { NewRoleInput, Role, RoleArgs, UpdateRoleInput } from './schema';
 
 import { NotFoundError } from '@/utils/errors';
@@ -6,6 +6,9 @@ import { HandleErrors } from '@/decorators/handleErrors';
 
 import RoleService from './service';
 import { Prisma } from '@prisma/client';
+import { GraphQLResolveInfo } from 'graphql';
+
+import { PrismaSelection, ProvideFields } from '@/utils/select';
 
 const ENTITY = Prisma.ModelName.Role;
 
@@ -19,7 +22,7 @@ export default class RoleResolver {
   }
 
   @Query((returns) => Role, { nullable: true })
-  async role(@Arg('id') id: string) {
+  async role(@Info() info: GraphQLResolveInfo, @Arg('id') id: string) {
     const role = await this.service.findById(id);
     if (role) return role;
 
@@ -27,8 +30,11 @@ export default class RoleResolver {
   }
 
   @Query((returns) => [Role])
-  async roles(@Args() { skip, take }: RoleArgs) {
-    return this.service.findAll({ skip, take });
+  async roles(
+    @ProvideFields<Role>() fields: PrismaSelection<Role>,
+    @Args() { skip, take }: RoleArgs,
+  ) {
+    return this.service.findAll(fields, { skip, take });
   }
 
   @Mutation((returns) => Role)

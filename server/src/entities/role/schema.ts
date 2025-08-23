@@ -1,5 +1,6 @@
 import { Max, Min } from 'class-validator';
 import { ArgsType, Field, ID, InputType, Int, ObjectType } from 'type-graphql';
+import { Permission } from '../permission/schema';
 
 @ObjectType()
 export class Role {
@@ -11,6 +12,9 @@ export class Role {
 
   @Field({ nullable: true })
   description: string;
+
+  @Field((type) => [Permission])
+  permissions: Permission[];
 }
 
 @InputType()
