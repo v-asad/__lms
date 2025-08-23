@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { GraphQLError, GraphQLFormattedError } from 'graphql';
 
-enum Errors {
+export enum ErrorCodes {
   NOT_FOUND = 'NOT_FOUND',
 }
 
@@ -10,7 +10,7 @@ export function formatError(
   _: unknown,
 ): GraphQLFormattedError {
   switch (formattedError.extensions?.code) {
-    case Errors.NOT_FOUND:
+    case ErrorCodes.NOT_FOUND:
       return {
         message: formattedError.message,
         extensions: formattedError.extensions,
@@ -20,10 +20,15 @@ export function formatError(
   return formattedError;
 }
 
+export function handleGQLError(err: GraphQLError): GraphQLError {
+  // TODO: Code to run when a GQL Error hits
+  return err;
+}
+
 export class NotFoundError extends GraphQLError {
   constructor(entity: Prisma.ModelName, id: string) {
     super(`${entity} not found for ID: [${id}]`, {
-      extensions: { code: Errors.NOT_FOUND, entity },
+      extensions: { code: ErrorCodes.NOT_FOUND, entity },
     });
   }
 }

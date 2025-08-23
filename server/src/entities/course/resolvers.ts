@@ -8,7 +8,9 @@ import {
 
 import CourseService from './service';
 import { NotFoundError } from '@/utils/errors';
+import { HandleErrors } from '@/decorators/handleErrors';
 
+@HandleErrors()
 @Resolver(Course)
 export default class CourseResolver {
   private courseService: CourseService;
@@ -31,7 +33,9 @@ export default class CourseResolver {
   }
 
   @Mutation((returns) => Course)
-  async addCourse(@Arg('addCourseData') addCourseData: NewCourseInput) {
+  async addCourse(
+    @Arg('addCourseData') addCourseData: NewCourseInput,
+  ): Promise<Course | null> {
     return this.courseService.add(addCourseData);
   }
 
@@ -40,7 +44,7 @@ export default class CourseResolver {
     @Arg('id') id: string,
     @Arg('updateCourseData')
     updateCourseData: UpdateCourseInput,
-  ) {
+  ): Promise<Course | null> {
     const course = await this.courseService.findById(id);
     if (course) return this.courseService.update(id, updateCourseData);
 
@@ -48,12 +52,13 @@ export default class CourseResolver {
   }
 
   @Mutation((returns) => Boolean)
-  async removeCourse(@Arg('id') id: string) {
-    try {
+  async removeCourse(@Arg('id') id: string): Promise<boolean> {
+    const course = await this.courseService.findById(id);
+    if (course) {
       await this.courseService.remove(id);
       return true;
-    } catch {
-      return false;
     }
+
+    throw new NotFoundError('Course', id);
   }
 }
