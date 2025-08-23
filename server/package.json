@@ -48,6 +48,6 @@
   },
   "prisma": {
     "schema": "./prisma/schema",
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seeds/main.ts"
   }
 }
