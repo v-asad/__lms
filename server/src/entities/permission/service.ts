@@ -1,3 +1,4 @@
+import { Service } from 'typedi';
 import {
   PermissionArgs,
   NewPermissionInput,
@@ -7,6 +8,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+@Service()
 export default class PermissionService {
   async findAll({ skip, take }: PermissionArgs) {
     return await prisma.permission.findMany({ skip, take });

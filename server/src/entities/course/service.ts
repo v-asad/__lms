@@ -1,3 +1,4 @@
+import { Service } from 'typedi';
 import {
   Course,
   CourseArgs,
@@ -8,6 +9,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+@Service()
 export default class CourseService {
   async findAll({ skip, take }: CourseArgs) {
     return await prisma.course.findMany({ skip, take });

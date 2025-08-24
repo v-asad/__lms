@@ -9,17 +9,15 @@ import { Prisma } from '@prisma/client';
 import { GraphQLResolveInfo } from 'graphql';
 
 import { PrismaSelection, ProvideFields } from '@/utils/select';
+import { Service } from 'typedi';
 
 const ENTITY = Prisma.ModelName.Role;
 
+@Service()
 @HandleErrors()
 @Resolver(Role)
 export default class RoleResolver {
-  private service: RoleService;
-
-  constructor() {
-    this.service = new RoleService();
-  }
+  constructor(private readonly service: RoleService) {}
 
   @Query((returns) => Role, { nullable: true })
   async role(@Info() info: GraphQLResolveInfo, @Arg('id') id: string) {

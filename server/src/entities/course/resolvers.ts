@@ -10,21 +10,19 @@ import CourseService from './service';
 import { NotFoundError } from '@/utils/errors';
 import { HandleErrors } from '@/decorators/handleErrors';
 import { Prisma } from '@prisma/client';
+import { Service } from 'typedi';
 
 const ENTITY = Prisma.ModelName.Course;
 
+@Service()
 @HandleErrors()
 @Resolver(Course)
 export default class CourseResolver {
-  private courseService: CourseService;
-
-  constructor() {
-    this.courseService = new CourseService();
-  }
+  constructor(private readonly service: CourseService) {}
 
   @Query((returns) => Course, { nullable: true })
   async course(@Arg('id') id: string) {
-    const course = await this.courseService.findById(id);
+    const course = await this.service.findById(id);
     if (course) return course;
 
     throw new NotFoundError(ENTITY, id);
@@ -32,12 +30,12 @@ export default class CourseResolver {
 
   @Query((returns) => [Course])
   async courses(@Args() { skip, take }: CourseArgs) {
-    return this.courseService.findAll({ skip, take });
+    return this.service.findAll({ skip, take });
   }
 
   @Mutation((returns) => Course)
   async addCourse(@Arg('addCourseData') addCourseData: NewCourseInput) {
-    return this.courseService.add(addCourseData);
+    return this.service.add(addCourseData);
   }
 
   @Mutation((returns) => Course, { nullable: true })
@@ -46,17 +44,17 @@ export default class CourseResolver {
     @Arg('updateCourseData')
     updateCourseData: UpdateCourseInput,
   ) {
-    const course = await this.courseService.findById(id);
-    if (course) return this.courseService.update(id, updateCourseData);
+    const course = await this.service.findById(id);
+    if (course) return this.service.update(id, updateCourseData);
 
     throw new NotFoundError(ENTITY, id);
   }
 
   @Mutation((returns) => Boolean)
   async removeCourse(@Arg('id') id: string) {
-    const course = await this.courseService.findById(id);
+    const course = await this.service.findById(id);
     if (course) {
-      await this.courseService.remove(id);
+      await this.service.remove(id);
       return true;
     }
 

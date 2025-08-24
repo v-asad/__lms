@@ -11,17 +11,15 @@ import { HandleErrors } from '@/decorators/handleErrors';
 
 import PermissionService from './service';
 import { Prisma } from '@prisma/client';
+import { Service } from 'typedi';
 
 const ENTITY = Prisma.ModelName.Permission;
 
+@Service()
 @HandleErrors()
 @Resolver(Permission)
 export default class PermissionResolver {
-  private service: PermissionService;
-
-  constructor() {
-    this.service = new PermissionService();
-  }
+  constructor(private readonly service: PermissionService) {}
 
   @Query((returns) => Permission, { nullable: true })
   async permission(@Arg('id') id: string) {

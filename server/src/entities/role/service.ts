@@ -1,9 +1,11 @@
 import { PrismaSelection } from '@/utils/select';
 import { NewRoleInput, UpdateRoleInput, RoleArgs } from './schema';
 import { PrismaClient, Role } from '@prisma/client';
+import { Service } from 'typedi';
 
 const prisma = new PrismaClient();
 
+@Service()
 export default class RoleService {
   async findAll(select: PrismaSelection<Role>, { skip, take }: RoleArgs) {
     return await prisma.role.findMany({
