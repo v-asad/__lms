@@ -61,17 +61,24 @@ export default class CourseResolver {
     updateCourseData: UpdateCourseInput,
     @ProvideFields<Course>() select: PrismaSelection<Course>,
   ) {
-    const course = await prisma.course.findFirst({
+    const existing = await prisma.course.findFirst({
       where: { id },
     });
-    if (course)
-      return prisma.course.update({
-        where: { id },
-        data: updateCourseData,
-        select,
-      });
 
-    throw new NotFoundError(ENTITY, 'id', id);
+    if (!existing) throw new NotFoundError(ENTITY, 'id', id);
+
+    const duplicate = await prisma.course.findFirst({
+      where: { title: updateCourseData.title },
+    });
+
+    if (duplicate)
+      throw new DuplicateError(ENTITY, 'title', updateCourseData.title);
+
+    return prisma.course.update({
+      where: { id },
+      data: updateCourseData,
+      select,
+    });
   }
 
   @Mutation(() => Boolean)
@@ -79,11 +86,9 @@ export default class CourseResolver {
     const course = await prisma.course.findFirst({
       where: { id },
     });
-    if (course) {
-      await prisma.course.delete({ where: { id } });
-      return true;
-    }
+    if (!course) throw new NotFoundError(ENTITY, 'id', id);
 
-    throw new NotFoundError(ENTITY, 'id', id);
+    await prisma.course.delete({ where: { id } });
+    return true;
   }
 }
