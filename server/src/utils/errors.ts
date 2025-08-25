@@ -46,9 +46,9 @@ export class DuplicateError extends GraphQLError {
 }
 
 export class UnAuthorizedError extends GraphQLError {
-  constructor(permission?: string) {
+  constructor(permissions?: string) {
     super(
-      `Unauthorized. ${permission && 'Required Permission: [' + permission + ']'}`,
+      `Unauthorized.${permissions ? ' Required Permissions: [' + permissions + ']' : ''}`,
       {
         extensions: { code: ErrorCodes.UNAUTHORIZED },
       },
