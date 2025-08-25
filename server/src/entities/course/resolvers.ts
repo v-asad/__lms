@@ -6,58 +6,84 @@ import {
   UpdateCourseInput,
 } from './schema';
 
-import CourseService from './service';
-import { NotFoundError } from '@/utils/errors';
+import { DuplicateError, NotFoundError } from '@/utils/errors';
 import { HandleErrors } from '@/decorators/handleErrors';
-import { Prisma } from '@prisma/client';
-import { Service } from 'typedi';
+import { Prisma, PrismaClient } from '@prisma/client';
+import { PrismaSelection, ProvideFields } from '@/utils/select';
 
 const ENTITY = Prisma.ModelName.Course;
 
-@Service()
+const prisma = new PrismaClient();
+
 @HandleErrors()
 @Resolver(Course)
 export default class CourseResolver {
-  constructor(private readonly service: CourseService) {}
-
-  @Query((returns) => Course, { nullable: true })
-  async course(@Arg('id') id: string) {
-    const course = await this.service.findById(id);
+  @Query(() => Course, { nullable: true })
+  async course(
+    @Arg('id') id: string,
+    @ProvideFields<Course>() select: PrismaSelection<Course>,
+  ) {
+    const course = await prisma.course.findFirst({
+      where: { id },
+      select,
+    });
     if (course) return course;
 
-    throw new NotFoundError(ENTITY, id);
+    throw new NotFoundError(ENTITY, 'id', id);
   }
 
-  @Query((returns) => [Course])
-  async courses(@Args() { skip, take }: CourseArgs) {
-    return this.service.findAll({ skip, take });
+  @Query(() => [Course])
+  async courses(
+    @Args() { skip, take }: CourseArgs,
+    @ProvideFields<Course>() select: PrismaSelection<Course>,
+  ) {
+    return prisma.course.findMany({ skip, take, select });
   }
 
-  @Mutation((returns) => Course)
-  async addCourse(@Arg('addCourseData') addCourseData: NewCourseInput) {
-    return this.service.add(addCourseData);
+  @Mutation(() => Course)
+  async addCourse(
+    @Arg('addCourseData') addCourseData: NewCourseInput,
+    @ProvideFields<Course>() select: PrismaSelection<Course>,
+  ) {
+    const existing = await prisma.course.findFirst({
+      where: { title: addCourseData.title },
+    });
+    if (existing)
+      throw new DuplicateError(ENTITY, 'title', addCourseData.title);
+
+    return prisma.course.create({ data: addCourseData, select });
   }
 
-  @Mutation((returns) => Course, { nullable: true })
+  @Mutation(() => Course, { nullable: true })
   async updateCourse(
     @Arg('id') id: string,
     @Arg('updateCourseData')
     updateCourseData: UpdateCourseInput,
+    @ProvideFields<Course>() select: PrismaSelection<Course>,
   ) {
-    const course = await this.service.findById(id);
-    if (course) return this.service.update(id, updateCourseData);
+    const course = await prisma.course.findFirst({
+      where: { id },
+    });
+    if (course)
+      return prisma.course.update({
+        where: { id },
+        data: updateCourseData,
+        select,
+      });
 
-    throw new NotFoundError(ENTITY, id);
+    throw new NotFoundError(ENTITY, 'id', id);
   }
 
-  @Mutation((returns) => Boolean)
+  @Mutation(() => Boolean)
   async removeCourse(@Arg('id') id: string) {
-    const course = await this.service.findById(id);
+    const course = await prisma.course.findFirst({
+      where: { id },
+    });
     if (course) {
-      await this.service.remove(id);
+      await prisma.course.delete({ where: { id } });
       return true;
     }
 
-    throw new NotFoundError(ENTITY, id);
+    throw new NotFoundError(ENTITY, 'id', id);
   }
 }

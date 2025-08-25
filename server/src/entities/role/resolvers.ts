@@ -1,65 +1,78 @@
-import { Arg, Args, Info, Mutation, Query, Resolver } from 'type-graphql';
+import { Arg, Args, Mutation, Query, Resolver } from 'type-graphql';
 import { NewRoleInput, Role, RoleArgs, UpdateRoleInput } from './schema';
 
-import { NotFoundError } from '@/utils/errors';
+import { DuplicateError, NotFoundError } from '@/utils/errors';
 import { HandleErrors } from '@/decorators/handleErrors';
 
-import RoleService from './service';
-import { Prisma } from '@prisma/client';
-import { GraphQLResolveInfo } from 'graphql';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 import { PrismaSelection, ProvideFields } from '@/utils/select';
-import { Service } from 'typedi';
 
 const ENTITY = Prisma.ModelName.Role;
 
-@Service()
+const prisma = new PrismaClient();
+
 @HandleErrors()
 @Resolver(Role)
 export default class RoleResolver {
-  constructor(private readonly service: RoleService) {}
-
-  @Query((returns) => Role, { nullable: true })
-  async role(@Info() info: GraphQLResolveInfo, @Arg('id') id: string) {
-    const role = await this.service.findById(id);
+  @Query(() => Role, { nullable: true })
+  async role(
+    @Arg('id') id: string,
+    @ProvideFields<Role>() select: PrismaSelection<Role>,
+  ) {
+    const role = await prisma.role.findFirst({ where: { id }, select });
     if (role) return role;
 
-    throw new NotFoundError(ENTITY, id);
+    throw new NotFoundError(ENTITY, 'id', id);
   }
 
-  @Query((returns) => [Role])
+  @Query(() => [Role])
   async roles(
-    @ProvideFields<Role>() fields: PrismaSelection<Role>,
     @Args() { skip, take }: RoleArgs,
+    @ProvideFields<Role>() select: PrismaSelection<Role>,
   ) {
-    return this.service.findAll(fields, { skip, take });
+    return prisma.role.findMany({ skip, take, select });
   }
 
-  @Mutation((returns) => Role)
-  async addPermission(@Arg('addRoleData') addRoleData: NewRoleInput) {
-    return this.service.add(addRoleData);
+  @Mutation(() => Role)
+  async addRole(
+    @Arg('addRoleData') addRoleData: NewRoleInput,
+    @ProvideFields<Role>() select: PrismaSelection<Role>,
+  ) {
+    const existing = await prisma.role.findFirst({
+      where: { name: addRoleData.name },
+    });
+    if (existing) throw new DuplicateError(ENTITY, 'name', addRoleData.name);
+
+    return prisma.role.create({ data: addRoleData, select });
   }
 
-  @Mutation((returns) => Role, { nullable: true })
+  @Mutation(() => Role, { nullable: true })
   async updateRole(
     @Arg('id') id: string,
     @Arg('updateRoleData')
     updateRoleData: UpdateRoleInput,
+    @ProvideFields<Role>() select: PrismaSelection<Role>,
   ) {
-    const role = await this.service.findById(id);
-    if (role) return this.service.update(id, updateRoleData);
+    const role = await prisma.role.findFirst({ where: { id } });
+    if (role)
+      return prisma.role.update({
+        where: { id },
+        data: updateRoleData,
+        select,
+      });
 
-    throw new NotFoundError(ENTITY, id);
+    throw new NotFoundError(ENTITY, 'id', id);
   }
 
-  @Mutation((returns) => Boolean)
+  @Mutation(() => Boolean)
   async removeRole(@Arg('id') id: string) {
-    const role = await this.service.findById(id);
+    const role = await prisma.role.findFirst({ where: { id } });
     if (role) {
-      await this.service.remove(id);
+      await prisma.role.delete({ where: { id } });
       return true;
     }
 
-    throw new NotFoundError(ENTITY, id);
+    throw new NotFoundError(ENTITY, 'id', id);
   }
 }

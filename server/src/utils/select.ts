@@ -6,9 +6,11 @@ import { GraphQLResolveInfo } from 'graphql';
 export type PrismaSelection<T> = {
   [K in keyof T]?: T[K] extends Array<infer U>
     ? { select: PrismaSelection<U> } // relations (arrays)
-    : T[K] extends object
-      ? { select: PrismaSelection<T[K]> } // relations (single objects)
-      : true; // scalars
+    : T[K] extends Date | Buffer | bigint // ✅ special-case scalars
+      ? true
+      : T[K] extends object
+        ? { select: PrismaSelection<T[K]> } // relations (nested objects)
+        : true; // scalars
 };
 
 function normalize<T>(obj: Record<string, unknown>): PrismaSelection<T> {

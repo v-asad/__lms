@@ -26,8 +26,16 @@ export function handleGQLError(err: GraphQLError): GraphQLError {
 }
 
 export class NotFoundError extends GraphQLError {
-  constructor(entity: Prisma.ModelName, id: string) {
-    super(`${entity} not found for ID: [${id}]`, {
+  constructor(entity: Prisma.ModelName, field: string, value: string) {
+    super(`${entity} not found for ${field}: [${value}]`, {
+      extensions: { code: ErrorCodes.NOT_FOUND, entity },
+    });
+  }
+}
+
+export class DuplicateError extends GraphQLError {
+  constructor(entity: Prisma.ModelName, field: string, value: string) {
+    super(`${entity} already exists for ${field}: [${value}]`, {
       extensions: { code: ErrorCodes.NOT_FOUND, entity },
     });
   }

@@ -1,89 +1,107 @@
-import { IResolvers } from '@graphql-tools/utils';
-import { users } from './data';
-import { User } from './types';
+import { hashPassword, comparePassword, createToken } from '@/utils/auth';
 import {
-  hashPassword,
-  comparePassword,
-  createToken,
-  AuthContext,
-} from '@/utils/auth';
+  LoginArgs,
+  LoginResponse,
+  NewUserInput,
+  UpdateUserInput,
+  User,
+  UserArgs,
+} from './schema';
+import { Arg, Args, Mutation, Query, Resolver } from 'type-graphql';
+import { HandleErrors } from '@/decorators/handleErrors';
+import { PrismaSelection, ProvideFields } from '@/utils/select';
+import { DuplicateError, NotFoundError } from '@/utils/errors';
+import { Prisma, PrismaClient } from '@prisma/client';
 
-let userIdCounter = 1;
+const ENTITY = Prisma.ModelName.User;
 
-const userResolvers: IResolvers<any, AuthContext> = {
-  Query: {
-    me: (_, __, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      return users.find((u) => u.id === user.userId) || null;
-    },
-    users: (_, __, { user }) => {
-      if (!user) throw new Error('Not authenticated');
-      return users;
-    },
-  },
+const prisma = new PrismaClient();
 
-  Mutation: {
-    signup: async (
-      _,
-      { username, email, password },
-    ): Promise<{ token: string; user: User }> => {
-      const existing = users.find((u) => u.email === email);
-      if (existing) throw new Error('Email already exists');
+@HandleErrors()
+@Resolver(User)
+export default class UserResolver {
+  @Query(() => User, { nullable: true })
+  async user(
+    @Arg('id') id: string,
+    @ProvideFields<User>() select: PrismaSelection<User>,
+  ) {
+    const user = await prisma.user.findFirst({ where: { id }, select });
+    if (user) return user;
 
-      const hashed = await hashPassword(password);
-      const newUser: User = {
-        id: String(userIdCounter++),
-        username,
-        email,
-        password: hashed,
-      };
-      users.push(newUser);
+    throw new NotFoundError(ENTITY, 'id', id);
+  }
 
-      const token = createToken(newUser);
-      return { token, user: newUser };
-    },
+  @Query(() => [User])
+  async users(
+    @Args() { skip, take }: UserArgs,
+    @ProvideFields<User>() select: PrismaSelection<User>,
+  ) {
+    return prisma.user.findMany({ skip, take, select });
+  }
 
-    login: async (
-      _,
-      { email, password },
-    ): Promise<{ token: string; user: User }> => {
-      const user = users.find((u) => u.email === email);
-      if (!user) throw new Error('User not found');
+  @Mutation(() => User)
+  async signup(
+    @Arg('addUserData') addUserData: NewUserInput,
+    @ProvideFields<User>() select: PrismaSelection<User>,
+  ) {
+    const existing = await prisma.user.findFirst({
+      where: { email: addUserData.email },
+    });
+    if (existing) throw new DuplicateError(ENTITY, 'email', addUserData.email);
 
-      const valid = await comparePassword(password, user.password);
-      if (!valid) throw new Error('Invalid password');
+    const hashedPassword = await hashPassword(addUserData.password);
 
-      const token = createToken(user);
-      return { token, user };
-    },
+    const user = await prisma.user.create({
+      data: {
+        ...addUserData,
+        password: hashedPassword,
+      },
+      select,
+    });
 
-    updateUser: async (
-      _,
-      { username, email, password },
-      { user },
-    ): Promise<User> => {
-      if (!user) throw new Error('Not authenticated');
+    return user;
+  }
 
-      const currentUser = users.find((u) => u.id === user.userId);
-      if (!currentUser) throw new Error('User not found');
+  @Mutation(() => LoginResponse)
+  async login(@Arg('loginData') loginData: LoginArgs) {
+    const user = await prisma.user.findFirst({
+      where: { email: loginData.email },
+    });
+    if (!user) throw new NotFoundError(ENTITY, 'email', loginData.email);
 
-      if (username) currentUser.username = username;
-      if (email) currentUser.email = email;
-      if (password) currentUser.password = await hashPassword(password);
+    const valid = await comparePassword(loginData.password, user.password);
+    if (!valid) throw new Error('Invalid password');
 
-      return currentUser;
-    },
+    const token = createToken(user.id);
+    return { token };
+  }
 
-    deleteUser: (_, { id }, { user }): boolean => {
-      if (!user) throw new Error('Not authenticated');
+  @Mutation(() => User, { nullable: true })
+  async updateUser(
+    @Arg('id') id: string,
+    @Arg('updateUserData')
+    updateUserData: UpdateUserInput,
+    @ProvideFields<User>() select: PrismaSelection<User>,
+  ) {
+    const user = await prisma.user.findFirst({ where: { id } });
+    if (user)
+      return prisma.user.update({
+        where: { id },
+        data: updateUserData,
+        select,
+      });
 
-      const index = users.findIndex((u) => u.id === id);
-      if (index === -1) throw new Error('User not found');
+    throw new NotFoundError(ENTITY, 'id', id);
+  }
 
-      users.splice(index, 1);
+  @Mutation(() => Boolean)
+  async removeUser(@Arg('id') id: string) {
+    const user = await prisma.user.findFirst({ where: { id } });
+    if (user) {
+      await prisma.user.delete({ where: { id } });
       return true;
-    },
-  },
-};
+    }
 
-export default userResolvers;
+    throw new NotFoundError(ENTITY, 'id', id);
+  }
+}

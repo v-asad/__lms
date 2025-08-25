@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 
+import { hashPassword } from '../../src/utils/auth';
+
 const prisma = new PrismaClient();
 
 const ADMIN_ROLE = 'admin';
@@ -21,7 +23,7 @@ export default async function seedAdminUserAndRole() {
       firstName: 'Admin',
       lastName: 'User',
       email: ADMIN_EMAIL,
-      password: ADMIN_PASSWORD,
+      password: await hashPassword(ADMIN_PASSWORD),
       role: { connect: { id: role.id } },
     },
   });

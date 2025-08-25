@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { User } from '@/entities/user/types';
 import config from '@/config/config';
+import { User } from '@/entities/user/schema';
 
 export interface JwtPayload {
   userId: string;
@@ -22,8 +22,8 @@ export const comparePassword = async (
   return bcrypt.compare(password, hashed);
 };
 
-export const createToken = (user: User): string => {
-  return jwt.sign({ userId: user.id }, config.secret, { expiresIn: '7d' });
+export const createToken = (id: User['id']): string => {
+  return jwt.sign({ userId: id }, config.secret, { expiresIn: '7d' });
 };
 
 export const getUserFromToken = (token?: string): JwtPayload | null => {
