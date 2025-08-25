@@ -1,4 +1,4 @@
-import { Arg, Args, Mutation, Query, Resolver } from 'type-graphql';
+import { Arg, Args, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import {
   Course,
   CourseArgs,
@@ -10,6 +10,8 @@ import { DuplicateError, NotFoundError } from '@/utils/errors';
 import { HandleErrors } from '@/decorators/handleErrors';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { PrismaSelection, ProvideFields } from '@/utils/select';
+import { JwtPayload } from '@/utils/auth';
+import { Protected } from '@/decorators/protected';
 
 const ENTITY = Prisma.ModelName.Course;
 
@@ -40,10 +42,12 @@ export default class CourseResolver {
     return prisma.course.findMany({ skip, take, select });
   }
 
+  @Protected()
   @Mutation(() => Course)
   async addCourse(
     @Arg('addCourseData') addCourseData: NewCourseInput,
     @ProvideFields<Course>() select: PrismaSelection<Course>,
+    @Ctx() { user }: { user: JwtPayload },
   ) {
     const existing = await prisma.course.findFirst({
       where: { title: addCourseData.title },
@@ -51,7 +55,10 @@ export default class CourseResolver {
     if (existing)
       throw new DuplicateError(ENTITY, 'title', addCourseData.title);
 
-    return prisma.course.create({ data: addCourseData, select });
+    return prisma.course.create({
+      data: { ...addCourseData, createdBy: user.userId },
+      select,
+    });
   }
 
   @Mutation(() => Course, { nullable: true })

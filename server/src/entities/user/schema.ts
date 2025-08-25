@@ -26,7 +26,7 @@ export class User {
   @Field()
   createdAt: Date;
 
-  @Field({ nullable: true })
+  @Field()
   updatedAt: Date;
 
   @Field((type) => Role)

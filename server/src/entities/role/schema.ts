@@ -13,6 +13,12 @@ export class Role {
   @Field({ nullable: true })
   description: string;
 
+  @Field()
+  createdAt: Date;
+
+  @Field()
+  updatedAt: Date;
+
   @Field((type) => [Permission])
   permissions: Permission[];
 }

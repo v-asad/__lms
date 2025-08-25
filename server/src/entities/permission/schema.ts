@@ -11,6 +11,12 @@ export class Permission {
 
   @Field({ nullable: true })
   description: string;
+
+  @Field()
+  createdAt: Date;
+
+  @Field()
+  updatedAt: Date;
 }
 
 @InputType()

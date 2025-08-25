@@ -3,6 +3,8 @@ import { GraphQLError, GraphQLFormattedError } from 'graphql';
 
 export enum ErrorCodes {
   NOT_FOUND = 'NOT_FOUND',
+  DUPLICATE = 'DUPLICATE',
+  UNAUTHORIZED = 'UNAUTHORIZED',
 }
 
 export function formatError(
@@ -11,6 +13,8 @@ export function formatError(
 ): GraphQLFormattedError {
   switch (formattedError.extensions?.code) {
     case ErrorCodes.NOT_FOUND:
+    case ErrorCodes.DUPLICATE:
+    case ErrorCodes.UNAUTHORIZED:
       return {
         message: formattedError.message,
         extensions: formattedError.extensions,
@@ -36,7 +40,15 @@ export class NotFoundError extends GraphQLError {
 export class DuplicateError extends GraphQLError {
   constructor(entity: Prisma.ModelName, field: string, value: string) {
     super(`${entity} already exists for ${field}: [${value}]`, {
-      extensions: { code: ErrorCodes.NOT_FOUND, entity },
+      extensions: { code: ErrorCodes.DUPLICATE, entity },
+    });
+  }
+}
+
+export class UnAuthorizedError extends GraphQLError {
+  constructor() {
+    super(`Unauthorized`, {
+      extensions: { code: ErrorCodes.UNAUTHORIZED },
     });
   }
 }

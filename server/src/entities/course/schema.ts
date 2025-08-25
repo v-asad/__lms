@@ -1,9 +1,10 @@
 import { Max, Min } from 'class-validator';
 import { ArgsType, Field, ID, InputType, Int, ObjectType } from 'type-graphql';
+import { User } from '../user/schema';
 
 @ObjectType()
 export class Course {
-  @Field((type) => ID)
+  @Field(() => ID)
   id: string;
 
   @Field()
@@ -11,6 +12,18 @@ export class Course {
 
   @Field()
   description: string;
+
+  @Field()
+  createdAt: Date;
+
+  @Field()
+  updatedAt: Date;
+
+  @Field()
+  createdBy: string;
+
+  @Field(() => User)
+  user: User;
 }
 
 @InputType()
@@ -21,7 +34,7 @@ export class NewCourseInput {
   @Field()
   title: string;
 
-  @Field()
+  @Field({ nullable: true })
   description: string;
 }
 
@@ -39,11 +52,11 @@ export class UpdateCourseInput {
 
 @ArgsType()
 export class CourseArgs {
-  @Field((type) => Int)
+  @Field(() => Int)
   @Min(0)
   skip: number = 0;
 
-  @Field((type) => Int)
+  @Field(() => Int)
   @Min(1)
   @Max(50)
   take: number = 25;
