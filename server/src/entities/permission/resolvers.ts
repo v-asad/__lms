@@ -11,6 +11,7 @@ import { HandleErrors } from '@/decorators/handleErrors';
 
 import { Prisma, PrismaClient } from '@prisma/client';
 import { PrismaSelection, ProvideFields } from '@/utils/select';
+import { Protected } from '@/decorators/protected';
 
 const ENTITY = Prisma.ModelName.Permission;
 
@@ -19,6 +20,7 @@ const prisma = new PrismaClient();
 @HandleErrors()
 @Resolver(Permission)
 export default class PermissionResolver {
+  @Protected('permission:read')
   @Query(() => Permission, { nullable: true })
   async permission(
     @Arg('id') id: string,
@@ -33,6 +35,7 @@ export default class PermissionResolver {
     throw new NotFoundError(ENTITY, 'id', id);
   }
 
+  @Protected('permission:read')
   @Query(() => [Permission])
   async permissions(
     @Args() { skip, take }: PermissionArgs,
@@ -41,6 +44,7 @@ export default class PermissionResolver {
     return prisma.permission.findMany({ skip, take, select });
   }
 
+  @Protected('permission:create')
   @Mutation(() => Permission)
   async addPermission(
     @Arg('addPermissionData') addPermissionData: NewPermissionInput,
@@ -55,6 +59,7 @@ export default class PermissionResolver {
     return prisma.permission.create({ data: addPermissionData, select });
   }
 
+  @Protected('permission:update')
   @Mutation(() => Permission, { nullable: true })
   async updatePermission(
     @Arg('id') id: string,
@@ -75,16 +80,15 @@ export default class PermissionResolver {
     throw new NotFoundError(ENTITY, 'id', id);
   }
 
+  @Protected('permission:delete')
   @Mutation(() => Boolean)
   async removePermission(@Arg('id') id: string) {
     const permission = await prisma.permission.findFirst({
       where: { id },
     });
-    if (permission) {
-      await prisma.permission.delete({ where: { id } });
-      return true;
-    }
+    if (!permission) throw new NotFoundError(ENTITY, 'id', id);
 
-    throw new NotFoundError(ENTITY, 'id', id);
+    await prisma.permission.delete({ where: { id } });
+    return true;
   }
 }

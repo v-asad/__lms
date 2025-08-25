@@ -20,6 +20,7 @@ const prisma = new PrismaClient();
 @HandleErrors()
 @Resolver(Course)
 export default class CourseResolver {
+  @Protected('course:read')
   @Query(() => Course, { nullable: true })
   async course(
     @Arg('id') id: string,
@@ -34,6 +35,7 @@ export default class CourseResolver {
     throw new NotFoundError(ENTITY, 'id', id);
   }
 
+  @Protected('course:read')
   @Query(() => [Course])
   async courses(
     @Args() { skip, take }: CourseArgs,
@@ -42,7 +44,7 @@ export default class CourseResolver {
     return prisma.course.findMany({ skip, take, select });
   }
 
-  @Protected()
+  @Protected('course:create')
   @Mutation(() => Course)
   async addCourse(
     @Arg('addCourseData') addCourseData: NewCourseInput,
@@ -61,6 +63,7 @@ export default class CourseResolver {
     });
   }
 
+  @Protected('course:update')
   @Mutation(() => Course, { nullable: true })
   async updateCourse(
     @Arg('id') id: string,
@@ -88,6 +91,7 @@ export default class CourseResolver {
     });
   }
 
+  @Protected('course:delete')
   @Mutation(() => Boolean)
   async removeCourse(@Arg('id') id: string) {
     const course = await prisma.course.findFirst({

@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import config from '@/config/config';
 import { User } from '@/entities/user/schema';
+import { Permission } from '@/entities/permission/schema';
 
 export interface JwtPayload {
   userId: string;
@@ -9,6 +10,7 @@ export interface JwtPayload {
 
 export interface AuthContext {
   user: JwtPayload | null;
+  permissions: string[];
 }
 
 export const hashPassword = async (password: string): Promise<string> => {

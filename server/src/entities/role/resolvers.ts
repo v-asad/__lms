@@ -7,6 +7,7 @@ import { HandleErrors } from '@/decorators/handleErrors';
 import { Prisma, PrismaClient } from '@prisma/client';
 
 import { PrismaSelection, ProvideFields } from '@/utils/select';
+import { Protected } from '@/decorators/protected';
 
 const ENTITY = Prisma.ModelName.Role;
 
@@ -15,6 +16,7 @@ const prisma = new PrismaClient();
 @HandleErrors()
 @Resolver(Role)
 export default class RoleResolver {
+  @Protected('role:read')
   @Query(() => Role, { nullable: true })
   async role(
     @Arg('id') id: string,
@@ -26,6 +28,7 @@ export default class RoleResolver {
     throw new NotFoundError(ENTITY, 'id', id);
   }
 
+  @Protected('role:read')
   @Query(() => [Role])
   async roles(
     @Args() { skip, take }: RoleArgs,
@@ -34,6 +37,7 @@ export default class RoleResolver {
     return prisma.role.findMany({ skip, take, select });
   }
 
+  @Protected('role:create')
   @Mutation(() => Role)
   async addRole(
     @Arg('addRoleData') addRoleData: NewRoleInput,
@@ -47,6 +51,45 @@ export default class RoleResolver {
     return prisma.role.create({ data: addRoleData, select });
   }
 
+  @Protected('role:update', 'permission:connect')
+  @Mutation(() => Boolean)
+  async addPermissionsToRole(
+    @Arg('id') id: string,
+    @Arg('permissionsToAdd', () => [String]) permissionsToAdd: string[],
+  ) {
+    const role = await prisma.role.findFirst({ where: { id } });
+    if (!role) throw new NotFoundError(ENTITY, 'id', id);
+
+    await prisma.role.update({
+      where: { id },
+      data: {
+        permissions: { connect: permissionsToAdd.map((id) => ({ id })) },
+      },
+    });
+
+    return true;
+  }
+
+  @Protected('role:update', 'permission:disconnect')
+  @Mutation(() => Boolean)
+  async removePermissionsToRole(
+    @Arg('id') id: string,
+    @Arg('permissionsToRemove', () => [String]) permissionsToRemove: string[],
+  ) {
+    const role = await prisma.role.findFirst({ where: { id } });
+    if (!role) throw new NotFoundError(ENTITY, 'id', id);
+
+    await prisma.role.update({
+      where: { id },
+      data: {
+        permissions: { disconnect: permissionsToRemove.map((id) => ({ id })) },
+      },
+    });
+
+    return true;
+  }
+
+  @Protected('role:update')
   @Mutation(() => Role, { nullable: true })
   async updateRole(
     @Arg('id') id: string,
@@ -65,6 +108,7 @@ export default class RoleResolver {
     throw new NotFoundError(ENTITY, 'id', id);
   }
 
+  @Protected('role:delete')
   @Mutation(() => Boolean)
   async removeRole(@Arg('id') id: string) {
     const role = await prisma.role.findFirst({ where: { id } });
